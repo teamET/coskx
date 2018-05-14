@@ -1,6 +1,6 @@
 sudo apt-get install libconfig
 wget https://bitbucket.org/ariya/phantomjs/downloads/phantomjs-2.1.1-linux-x86_64
-tar.bz2. tar xvf /phantomjs-2.1.1-linux-x86_64.tar.bz2.
+tar xvf /phantomjs-2.1.1-linux-x86_64.tar.bz2.
 
 #phantom js test
 phantomjs-2.1.1-linux-x86_64/bin/phantomjs hello.js.
