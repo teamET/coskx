@@ -2,6 +2,10 @@ const puppeteer = require("puppeteer");
 const request = require("request");
 const fs = require("fs");
 const jsdom=require('jsdom');
+const {RTMClient}=require('@slack/client');
+const rtm=new RTMClient(process.env.SLACK_TOKEN);
+
+rtm.start();
 
 function slack(data){
 	if(process.env.SLACK_TOKEN === undefined){
@@ -12,16 +16,15 @@ function slack(data){
         form: {
             token: process.env.SLACK_TOKEN,
             channel: 'bot-test',
-            username: 'test-bot',
+            username: 'coskx-uploader',
             text: data
 		}
 　　},(error, response, body) => {
-        console.log(error)
+		if (error) console.log(error);
     })
-    console.log('push succeed',data);
 };
 
-const submit=(async()=>{
+const submit=(async(file)=>{
 	var text=''
 	var username='s15097'
 	var password='s15097'
@@ -34,34 +37,47 @@ const submit=(async()=>{
 	await page.click('input[type=button]');
 	await page.waitForNavigation({timeout: 60000, waitUntil: "domcontentloaded"});
 	const fileInput = await page.$('input[type=file]');
-	await fileInput.uploadFile('/home/sktrombone/hax/mon1ex06.txt');
+	await fileInput.uploadFile(file);
 	await page.click('input[id="sendfiles"]');
-//	text=await page.evaluate(()=> document.body.innnerHTML);
-	text=await page.evaluate(()=>{
-		console.log(document.querySelectorAll('head'));
-		console.log('process succeed');
+	const submittion = await page.evaluate(() => {
+		const node = document.querySelectorAll("tr");
+		const data = [];
+		for (item of node){
+			data.push(item.innerText);
+		}
+		return data.slice(0,data.length-3).join('\n');
 	});
-	//text=scraper();
-	console.log('submit finished');
+	console.log('submittion',submittion,typeof(submission));
+	slack(submittion);
 	browser.close();
 	return text;
 });
 
-const scrape=(async(text)=>{
-	const dom=new jsdom.JSDOM(text);
-	if(text ===''){
-		console.log('there are nothing text data');
-		return;
-	}else{
-		console.log(text);
+rtm.on('hello',(event)=>{
+	console.log('start slack process');
+});
+
+rtm.on('message',(event)=>{
+	if(event.text.split(' ')[0]==='.h'){
+		slack('hello')
+	}else if(event.text.split(' ')[0]==='.x'){
+		slack('x was sent',event.text.split(' ')[1]);
 	}
-	console.log('dom data is',dom.window.document);
+	//if(event.text.split(' ')[0]==='.u'){ }
+
+	if(event.subtype && event.subtype==='file_share'){
+		file=download(event.file);
+		text=submit(file)
+	}
 });
 
-const main=(()=>{
-	console.log('start process');
-	text=submit();
-	slack('hello slack');
-});
+function download(file){
+	let headers={Authorization: ' Bearer '+process.env.SLACK_TOKEN};
+	fname='./files/'+file.name;
+	request({
+		url:file.url_private,
+		headers:{'Authorization': 'Bearer '+process.env.SLACK_TOKEN}})
+			.pipe(fs.createWriteStream('./files/'+file.name));
+	return fname;
+}
 
-main()
