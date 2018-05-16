@@ -31,12 +31,15 @@ function slack(data){
 
 const submit=(async(file)=>{
 	var text=''
-	var username = account[slack_id["id"]];
-	var password = account[slack_id["pass"]];
-	console.log('submit started');
+	var username = account[slack_id]["id"];
+	var password = account[slack_id]["pass"];
+	
+	console.log(account);
+	console.log('submit start');
 	const browser = await puppeteer.launch({args: ['--no-sandbox', '--disable-setuid-sandbox']});
 	const page = await browser.newPage();
 	await page.goto('http://yamashita002.je.tokyo-ct.ac.jp/reports2018_yama/4Jucom.php?',{waitUntil: "domcontentloaded"});
+	console.log(username,password);
 	await page.type('input[name="userID"]',username);
 	await page.type('input[name="userPASS"]',password);
 	await page.click('input[type=button]');
@@ -54,7 +57,16 @@ const submit=(async(file)=>{
 		return data.slice(0,data.length-3).join('\n');
 	});
 	console.log('submittion',submittion,typeof(submission));
-	slack(submittion);
+/*	const systemMessage = await page.evaluate(() => {
+		const node document.querySelectorAll(div[style="overflow-y:auto; height:90px; resize: vertical; background-color:#f0f0f0;"]);
+		const data = [];
+		for (item of node){
+			data.push(item.innerText);
+		}
+		return data.split("\n")[1];
+	});
+*/	slack(submittion);
+//	slack(systemMessage);
 	browser.close();
 	return text;
 });
@@ -72,15 +84,18 @@ rtm.on('message',(event)=>{
 	}else if(event.text.split(' ')[0]==='.entry'){
 		var id = event.text.split(' ')[1];
 		var pass = event.text.split(' ')[2];
-		account[slack_id] = {id:id,pass:pass};
-		fs.writeFile('account.json',JSON.stringify(account));
-		slack("Your account has been registered.");
+		account[slack_id] = {"id":id,"pass":pass};
+		console.log(account);
+		fs.writeFileSync('account.json',JSON.stringify(account));
+		slack("Your registration is complete.");
 	}
 	//if(event.text.split(' ')[0]==='.u'){ }
 
 	if(event.subtype && event.subtype==='file_share'){
 		console.log(event.file);
 		file=download(event.file.title,event.file.url_private);
+		console.log(account);
+
 		if(account[slack_id] !== undefined){
 			text=submit(file);
 		}else{
