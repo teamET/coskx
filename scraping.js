@@ -8,8 +8,17 @@ const rtm=new RTMClient(process.env.SLACK_TOKEN);
 rtm.start();
 
 var slack_id;
-var account_data = fs.readFileSync('./account.json');
-var account = JSON.parse(account_data);
+var account_data;
+var account;
+try {
+	account_data = fs.readFileSync('./account.json');
+	account = JSON.parse(account_data);
+}catch(e){
+	account = {
+		user :{id:"id",pass:"pass"}
+	};
+	fs.writeFileSync('account.json',JSON.stringify(account));	
+}
 
 
 function slack(data){
@@ -51,6 +60,8 @@ const submit=(async(file)=>{
 		const fileInput = await page.$('input[type=file]');
 		await fileInput.uploadFile(file);
 		await page.click('input[id="sendfiles"]');
+		await page.click('input[name="reload"]');
+		await page.waitForNavigation({timeout: 60000, waitUntil: "domcontentloaded"});
 		const submittion = await page.evaluate(() => {
 			const node = document.querySelectorAll("tr");
 			const data = [];
@@ -60,6 +71,15 @@ const submit=(async(file)=>{
 			return data.slice(0,data.length-3).join('\n');
 		});
 		console.log(submittion);
+		const systemMessage = await page.evaluate(() => {
+			const node = doument.querySelectorAll('div[style="overflow-y:auto; height:90px; resize: vertical; background-color:#f0f0f0;"]');
+			const data = [];
+			for (item of node) {
+				data.push(item.innerText);
+			}
+			return data.join('\n');
+		});
+		console.log(systemMessage);
 		console.log('submittion',submittion,typeof(submission));
 		slack(submittion);
 		browser.close();
@@ -90,7 +110,7 @@ rtm.on('message',(event)=>{
 		var pass = event.text.split(' ')[2];
 		account[slack_id] = {"id":id,"pass":pass};
 		fs.writeFileSync('account.json',JSON.stringify(account));
-		slack("Your account has been registered.");
+		slack("Your account is registered.");
 	}
 	if(event.subtype && event.subtype==='file_share'){
 		console.log(event.file);
