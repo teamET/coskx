@@ -49,7 +49,9 @@ const submit=(async(file)=>{
 		return ;
 	}
 	try{
-		const browser = await puppeteer.launch({args: ['--no-sandbox', '--disable-setuid-sandbox']});
+		const browser = await puppeteer.launch({
+			executablePath: '/usr/bin/chromium-browser'
+		});
 		const page = await browser.newPage();
 		await page.goto('http://yamashita002.je.tokyo-ct.ac.jp/reports2018_yama/4Jucom.php?',{waitUntil: "domcontentloaded"});
 		await page.type('input[name="userID"]',username);
