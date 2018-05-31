@@ -63,7 +63,7 @@ const submit=(async(file)=>{
 		await fileInput.uploadFile(file);
 		await page.waitFor(5000);
 		await page.click('input[id="sendfiles"]');
-		await page.wairFor(5000);
+		await page.waitFor(5000);
 		await page.click('input[name="reload"]');
 		await page.waitForNavigation({timeout: 60000, waitUntil: "domcontentloaded"});
 		const submittion = await page.evaluate(() => {
@@ -76,7 +76,7 @@ const submit=(async(file)=>{
 		});
 		console.log(submittion);
 		const systemMessage = await page.evaluate(() => {
-			const node = doument.querySelectorAll('div[style="overflow-y:auto; height:90px; resize: vertical; background-color:#f0f0f0;"]');
+			const node = document.querySelectorAll('div[style="overflow-y:auto; height:90px; resize: vertical; background-color:#f0f0f0;"]');
 			const data = [];
 			for (item of node) {
 				data.push(item.innerText);
