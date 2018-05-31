@@ -49,7 +49,9 @@ const submit=(async(file)=>{
 		return ;
 	}
 	try{
-		const browser = await puppeteer.launch({args: ['--no-sandbox', '--disable-setuid-sandbox']});
+		const browser = await puppeteer.launch({
+			executablePath: '/usr/bin/chromium-browser'
+		});
 		const page = await browser.newPage();
 		await page.goto('http://yamashita002.je.tokyo-ct.ac.jp/reports2018_yama/4Jucom.php?',{waitUntil: "domcontentloaded"});
 		await page.type('input[name="userID"]',username);
@@ -59,7 +61,9 @@ const submit=(async(file)=>{
 		process.on('unhandledRejection', console.dir);
 		const fileInput = await page.$('input[type=file]');
 		await fileInput.uploadFile(file);
+		await page.waitFor(5000);
 		await page.click('input[id="sendfiles"]');
+		await page.wairFor(5000);
 		await page.click('input[name="reload"]');
 		await page.waitForNavigation({timeout: 60000, waitUntil: "domcontentloaded"});
 		const submittion = await page.evaluate(() => {
@@ -113,8 +117,26 @@ rtm.on('message',(event)=>{
 		slack("Your account is registered.");
 	}
 	if(event.subtype && event.subtype==='file_share'){
+		console.log("title");
 		console.log(event.file);
-		file=download(event.file.title,event.file.url_private);
+		var dirname='./files/'+slack_id;
+		console.log(slack_id);
+		console.log("dirname");
+		console.log(dirname);
+		var fname=dirname+'/'+event.file.title;
+		try{
+			fs.accessSync(dirname);
+		} catch(err){
+			fs.mkdirSync(dirname);
+			console.log(dirname);
+		}
+		try{
+			fs.accessSync(fname);
+			fs.unlink(fname);
+		} catch(err){
+			console.log(fname);
+		}
+		file=download(fname,event.file.url_private);
 		if(account[slack_id] !== undefined){
 			text=submit(file);
 		}else{
@@ -123,9 +145,8 @@ rtm.on('message',(event)=>{
 	}
 });
 
-function download(name,url){
+function download(fname,url){
 	let headers={Authorization: ' Bearer '+process.env.SLACK_TOKEN};
-	let fname='./files/'+name;
 	request({
 		url:url,//file.url_private,
 		headers:{'Authorization': 'Bearer '+process.env.SLACK_TOKEN}})
