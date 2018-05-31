@@ -10,6 +10,8 @@ rtm.start();
 var slack_id;
 var account_data;
 var account;
+var channelname;
+var check;
 try {
 	account_data = fs.readFileSync('./account.json');
 	account = JSON.parse(account_data);
@@ -29,7 +31,7 @@ function slack(data){
     request.post('https://slack.com/api/chat.postMessage',{
         form: {
             token: process.env.SLACK_TOKEN,
-            channel: 'bot-test',
+            channel: channelname,
             username: 'coskx-uploader',
             text: data
 		}
@@ -38,7 +40,7 @@ function slack(data){
     })
 };
 
-const submit=(async(file)=>{
+const submit=(async(file,check)=>{
 	var text=''
 	var username = account[slack_id]["id"];
 	var password = account[slack_id]["pass"];
@@ -59,13 +61,25 @@ const submit=(async(file)=>{
 		await page.click('input[type=button]');
 		await page.waitForNavigation({timeout: 60000, waitUntil: "domcontentloaded"});
 		process.on('unhandledRejection', console.dir);
-		const fileInput = await page.$('input[type=file]');
-		await fileInput.uploadFile(file);
-		await page.waitFor(5000);
-		await page.click('input[id="sendfiles"]');
-		await page.waitFor(5000);
-		await page.click('input[name="reload"]');
-		await page.waitForNavigation({timeout: 60000, waitUntil: "domcontentloaded"});
+		if(check==0){
+			const fileInput = await page.$('input[type=file]');
+			await fileInput.uploadFile(file);
+			await page.waitFor(5000);
+			await page.click('input[id="sendfiles"]');
+			await page.waitFor(5000);
+			await page.click('input[name="reload"]');
+			await page.waitForNavigation({timeout: 60000, waitUntil: "domcontentloaded"});
+			const systemMessage = await page.evaluate(() => {
+				const node = document.querySelectorAll('div[style="overflow-y:auto; height:90px; resize: vertical; background-color:#f0f0f0;"]');
+				const data = [];
+				for (item of node) {
+					data.push(item.innerText);
+				}
+				return data[0].split('\n')[1];
+			});
+			console.log(systemMessage);
+			slack(systemMessage);
+		}
 		const submittion = await page.evaluate(() => {
 			const node = document.querySelectorAll("tr");
 			const data = [];
@@ -75,16 +89,6 @@ const submit=(async(file)=>{
 			return data.slice(0,data.length-3).join('\n');
 		});
 		console.log(submittion);
-		const systemMessage = await page.evaluate(() => {
-			const node = document.querySelectorAll('div[style="overflow-y:auto; height:90px; resize: vertical; background-color:#f0f0f0;"]');
-			const data = [];
-			for (item of node) {
-				data.push(item.innerText);
-			}
-			return data.join('\n');
-		});
-		console.log(systemMessage);
-		console.log('submittion',submittion,typeof(submission));
 		slack(submittion);
 		browser.close();
 	}catch(err){
@@ -101,6 +105,8 @@ rtm.on('hello',(event)=>{
 
 rtm.on('message',(event)=>{
 	slack_id = event.user;
+	channelname = event.channel;
+	check=0;
 	if(event.text.split(' ')[0]==='.h'){
 		slack('hello');
 	}else if(event.text.split(' ')[0]==='.x'){
@@ -117,10 +123,15 @@ rtm.on('message',(event)=>{
 		slack("Your account is registered.");
 	}else if(event.text.split(' ')[0]==='.help'){
 		slack('-help : .help\n-x : .x\n-h : .h\n-entry : .entry [id] [password]')
+	}else if(event.text.split(' ')[0]==='.c'){
+		check=1;
 	}
+	if(check==1) text=submit("non",check);
 	if(event.subtype && event.subtype==='file_share'){
 		console.log("title");
 		console.log(event.file);
+		console.log("channel");
+		console.log(event.channel);
 		var dirname='./files/'+slack_id;
 		console.log(slack_id);
 		console.log("dirname");
@@ -140,7 +151,7 @@ rtm.on('message',(event)=>{
 		}
 		file=download(fname,event.file.url_private);
 		if(account[slack_id] !== undefined){
-			text=submit(file);
+			text=submit(file,check);
 		}else{
 			slack("Please register your account."); 
 		}
