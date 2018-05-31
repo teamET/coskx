@@ -1,0 +1,19 @@
+{
+  "name": "coskx",
+  "version": "1.0.0",
+  "description": "",
+  "main": "scraping.js",
+  "scripts": {
+    "test": "node scraping.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/teamet/coskx.git"
+  },
+  "author": "sktrombone , sakakendo",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/teamet/coskx/issues"
+  },
+  "homepage": "https://github.com/teamet/coskx#readme"
+}
