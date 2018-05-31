@@ -61,7 +61,9 @@ const submit=(async(file)=>{
 		process.on('unhandledRejection', console.dir);
 		const fileInput = await page.$('input[type=file]');
 		await fileInput.uploadFile(file);
+		await page.waitFor(5000);
 		await page.click('input[id="sendfiles"]');
+		await page.wairFor(5000);
 		await page.click('input[name="reload"]');
 		await page.waitForNavigation({timeout: 60000, waitUntil: "domcontentloaded"});
 		const submittion = await page.evaluate(() => {
@@ -113,10 +115,30 @@ rtm.on('message',(event)=>{
 		account[slack_id] = {"id":id,"pass":pass};
 		fs.writeFileSync('account.json',JSON.stringify(account));
 		slack("Your account is registered.");
+	}else if(event.text.split(' ')[0]==='.help'){
+		slack('-help : .help\n-x : .x\n-h : .h\n-entry : .entry [id] [password]')
 	}
 	if(event.subtype && event.subtype==='file_share'){
+		console.log("title");
 		console.log(event.file);
-		file=download(event.file.title,event.file.url_private);
+		var dirname='./files/'+slack_id;
+		console.log(slack_id);
+		console.log("dirname");
+		console.log(dirname);
+		var fname=dirname+'/'+event.file.title;
+		try{
+			fs.accessSync(dirname);
+		} catch(err){
+			fs.mkdirSync(dirname);
+			console.log(dirname);
+		}
+		try{
+			fs.accessSync(fname);
+			fs.unlink(fname);
+		} catch(err){
+			console.log(fname);
+		}
+		file=download(fname,event.file.url_private);
 		if(account[slack_id] !== undefined){
 			text=submit(file);
 		}else{
@@ -125,9 +147,8 @@ rtm.on('message',(event)=>{
 	}
 });
 
-function download(name,url){
+function download(fname,url){
 	let headers={Authorization: ' Bearer '+process.env.SLACK_TOKEN};
-	let fname='./files/'+name;
 	request({
 		url:url,//file.url_private,
 		headers:{'Authorization': 'Bearer '+process.env.SLACK_TOKEN}})
