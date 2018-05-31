@@ -115,6 +115,8 @@ rtm.on('message',(event)=>{
 		account[slack_id] = {"id":id,"pass":pass};
 		fs.writeFileSync('account.json',JSON.stringify(account));
 		slack("Your account is registered.");
+	}else if(event.text.split(' ')[0]==='.help'){
+		slack('-help : .help\n-x : .x\n-h : .h\n-entry : .entry [id] [password]')
 	}
 	if(event.subtype && event.subtype==='file_share'){
 		console.log("title");
