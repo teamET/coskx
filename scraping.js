@@ -107,8 +107,9 @@ rtm.on('message',(event)=>{
 	slack_id = event.user;
 	channelname = event.channel;
 	check=0;
-	if(event.text.split(' ')[0]==='.h'){
-		slack('hello');
+	if(event.text.split(' ')[0]==='.h' || event.text.split(' ')[0]==='.help'){
+		slack('hello I am coskx-uploader.');
+		slack('-help : .help\n-x : .x\n-h : .h\n-entry : .entry [id] [password]')
 	}else if(event.text.split(' ')[0]==='.x'){
 		slack('x was sent',event.text.split(' ')[1]);
 	}else if(event.text.split(' ')[0]==='.entry'){
@@ -121,10 +122,13 @@ rtm.on('message',(event)=>{
 		account[slack_id] = {"id":id,"pass":pass};
 		fs.writeFileSync('account.json',JSON.stringify(account));
 		slack("Your account is registered.");
-	}else if(event.text.split(' ')[0]==='.help'){
-		slack('-help : .help\n-x : .x\n-h : .h\n-entry : .entry [id] [password]')
 	}else if(event.text.split(' ')[0]==='.c'){
 		check=1;
+	}else if(event.text.split(' ')[0]==='.s'){
+	    exec(text.split(' ').slice(1,text.length), (err, stdout, stderr) => {
+	    if (err) { console.log(err); }
+		console.log(stdout);
+	    });
 	}
 	if(check==1) text=submit("non",check);
 	if(event.subtype && event.subtype==='file_share'){
