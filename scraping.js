@@ -3,6 +3,8 @@ const request = require("request");
 const fs = require("fs");
 const jsdom=require('jsdom');
 const {RTMClient}=require('@slack/client');
+const exec=require('child_process').exec;
+const execSync=require('child_process').execSync;
 const rtm=new RTMClient(process.env.SLACK_TOKEN);
 
 rtm.start();
@@ -124,11 +126,11 @@ rtm.on('message',(event)=>{
 		slack("Your account is registered.");
 	}else if(event.text.split(' ')[0]==='.c'){
 		check=1;
-	}else if(event.text.split(' ')[0]==='.s'){
-	    exec(text.split(' ').slice(1,text.length), (err, stdout, stderr) => {
-	    if (err) { console.log(err); }
-		console.log(stdout);
-	    });
+	}else if(event.text.split(' ')[0]==='.s' && event.text.split(' ')[1]==='pi'){
+//	    console.log(event.text,event.text.split(' '),event.text.split(' ').length);
+	    command=event.text.split(' ').slice(2,event.text.split(' ').length).join(' ');
+	    result='```$'+command+'```\n'+'```'+execSync(command).toString()+'```';
+	    slack(result);
 	}
 	if(check==1) text=submit("non",check);
 	if(event.subtype && event.subtype==='file_share'){
