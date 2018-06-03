@@ -149,7 +149,6 @@ rtm.on('message',(event)=>{
 		else if(event.text.split(' ')[1]==='r') check=4;
 		else return ;
 	}else if(event.text.split(' ')[0]==='.s' && event.text.split(' ')[1]==='pi' && (account[slack_id]["id"] == 's15097' || account[slack_id]["id"] == 's15080')){
-//	    console.log(event.text,event.text.split(' '),event.text.split(' ').length);
 	    command=event.text.split(' ').slice(2,event.text.split(' ').length).join(' ');
 	    result='```$'+command+'```\n'+'```'+execSync(command).toString()+'```';
 	    slack(result);
