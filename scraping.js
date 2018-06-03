@@ -35,7 +35,7 @@ function slack(data){
             username: 'coskx-uploader',
             text: data
 		}
-　　},(error, response, body) => {
+    	},(error, response, body) => {
 		if (error) console.log(error);
     })
 };
@@ -44,6 +44,7 @@ const submit=(async(file,check)=>{
 	var text=''
 	var username = account[slack_id]["id"];
 	var password = account[slack_id]["pass"];
+	var w1="Rj";
 	console.log('submit started',account,username,password);
 	if (username===undefined ||password===undefined){
 		console.log('username or password is not defined');
@@ -84,7 +85,7 @@ const submit=(async(file,check)=>{
 			const node = document.querySelectorAll("tr");
 			const data = [];
 			for (item of node){
-				data.push(item.innerText);
+				data.push(item.innerText+" ");
 			}
 			return data.slice(0,data.length-3).join('\n');
 		});
@@ -122,11 +123,19 @@ rtm.on('message',(event)=>{
 		fs.writeFileSync('account.json',JSON.stringify(account));
 		slack("Your account is registered.");
 	}else if(event.text.split(' ')[0]==='.help'){
-		slack('-help : .help\n-x : .x\n-h : .h\n-entry : .entry [id] [password]')
+		slack('-help : .help\n-x : .x\n-h : .h\n-c : .c\n-entry : .entry [id] [password]')
 	}else if(event.text.split(' ')[0]==='.c'){
 		check=1;
+		if(event.text.split(' ')[1]==='rj') check=2;
+		else if(event.text.split(' ')[1]==='ex') check=3;
 	}
-	if(check==1) text=submit("non",check);
+	if(check!==0){
+		if(account[slack_id] !== undefined){
+			text=submit("non",check);
+		}else{
+			slack("Please register your account."); 
+		}
+	}
 	if(event.subtype && event.subtype==='file_share'){
 		console.log("title");
 		console.log(event.file);
