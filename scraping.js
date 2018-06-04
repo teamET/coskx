@@ -37,7 +37,7 @@ function slack(data){
             username: 'coskx-uploader',
             text: data
 		}
-　　},(error, response, body) => {
+    	},(error, response, body) => {
 		if (error) console.log(error);
     })
 };
@@ -46,6 +46,7 @@ const submit=(async(file,check)=>{
 	var text=''
 	var username = account[slack_id]["id"];
 	var password = account[slack_id]["pass"];
+	var w1="Rj";
 	console.log('submit started',account,username,password);
 	if (username===undefined ||password===undefined){
 		console.log('username or password is not defined');
@@ -86,7 +87,7 @@ const submit=(async(file,check)=>{
 			const node = document.querySelectorAll("tr");
 			const data = [];
 			for (item of node){
-				data.push(item.innerText);
+				data.push(item.innerText+" ");
 			}
 			return data.slice(0,data.length-3).join('\n');
 		});
@@ -111,9 +112,7 @@ rtm.on('message',(event)=>{
 	check=0;
 	if(event.text.split(' ')[0]==='.h' || event.text.split(' ')[0]==='.help'){
 		slack('hello I am coskx-uploader.');
-		slack('-help : .help\n-x : .x\n-h : .h\n-entry : .entry [id] [password]')
-	}else if(event.text.split(' ')[0]==='.x'){
-		slack('x was sent',event.text.split(' ')[1]);
+		slack('-help : .help\n-x : .x\n-h : .h\n-c : .c\n-entry : .entry [id] [password]');
 	}else if(event.text.split(' ')[0]==='.entry'){
 		if(event.text.split(' ').length != 3){
 			slack('username or password is invalid context.\ne.g.\n.entry <username> <password>');
@@ -126,13 +125,15 @@ rtm.on('message',(event)=>{
 		slack("Your account is registered.");
 	}else if(event.text.split(' ')[0]==='.c'){
 		check=1;
-	}else if(event.text.split(' ')[0]==='.s' && event.text.split(' ')[1]==='pi'){
+		if(event.text.split(' ')[1]==='rj') check=2;
+		else if(event.text.split(' ')[1]==='ex') check=3;
+  }else if(event.text.split(' ')[0]==='.s' && event.text.split(' ')[1]==='pi'){
 //	    console.log(event.text,event.text.split(' '),event.text.split(' ').length);
 	    command=event.text.split(' ').slice(2,event.text.split(' ').length).join(' ');
 	    result='```$'+command+'```\n'+'```'+execSync(command).toString()+'```';
 	    slack(result);
 	}
-	if(check==1) text=submit("non",check);
+
 	if(event.subtype && event.subtype==='file_share'){
 		console.log("title");
 		console.log(event.file);
